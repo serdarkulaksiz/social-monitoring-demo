@@ -1,0 +1,363 @@
+{
+ "notes": "Turkish provinces for location hints. 'key' and 'aliases' are folded (lowercase, no diacritics, as produced by text_normalizer.fold). Names marked 'strict' are also ordinary words (e.g. 'ağrı' pain, 'tokat' slap, 'müşteri' starts with 'muş'), so they only count with a locative/ablative suffix (-da/-de/-dan/-den/-daki) or when followed by 'ili'/'ilinde'/'merkez'.",
+ "provinces": [
+  {
+   "key": "adana",
+   "name": "Adana"
+  },
+  {
+   "key": "adiyaman",
+   "name": "Adıyaman"
+  },
+  {
+   "key": "afyonkarahisar",
+   "name": "Afyonkarahisar",
+   "aliases": [
+    "afyon"
+   ]
+  },
+  {
+   "key": "agri",
+   "name": "Ağrı",
+   "strict": true
+  },
+  {
+   "key": "amasya",
+   "name": "Amasya"
+  },
+  {
+   "key": "ankara",
+   "name": "Ankara"
+  },
+  {
+   "key": "antalya",
+   "name": "Antalya"
+  },
+  {
+   "key": "artvin",
+   "name": "Artvin"
+  },
+  {
+   "key": "aydin",
+   "name": "Aydın",
+   "strict": true
+  },
+  {
+   "key": "balikesir",
+   "name": "Balıkesir"
+  },
+  {
+   "key": "bilecik",
+   "name": "Bilecik"
+  },
+  {
+   "key": "bingol",
+   "name": "Bingöl"
+  },
+  {
+   "key": "bitlis",
+   "name": "Bitlis"
+  },
+  {
+   "key": "bolu",
+   "name": "Bolu",
+   "strict": true
+  },
+  {
+   "key": "burdur",
+   "name": "Burdur"
+  },
+  {
+   "key": "bursa",
+   "name": "Bursa"
+  },
+  {
+   "key": "canakkale",
+   "name": "Çanakkale"
+  },
+  {
+   "key": "cankiri",
+   "name": "Çankırı"
+  },
+  {
+   "key": "corum",
+   "name": "Çorum"
+  },
+  {
+   "key": "denizli",
+   "name": "Denizli"
+  },
+  {
+   "key": "diyarbakir",
+   "name": "Diyarbakır"
+  },
+  {
+   "key": "edirne",
+   "name": "Edirne"
+  },
+  {
+   "key": "elazig",
+   "name": "Elazığ"
+  },
+  {
+   "key": "erzincan",
+   "name": "Erzincan"
+  },
+  {
+   "key": "erzurum",
+   "name": "Erzurum"
+  },
+  {
+   "key": "eskisehir",
+   "name": "Eskişehir"
+  },
+  {
+   "key": "gaziantep",
+   "name": "Gaziantep",
+   "aliases": [
+    "antep"
+   ]
+  },
+  {
+   "key": "giresun",
+   "name": "Giresun"
+  },
+  {
+   "key": "gumushane",
+   "name": "Gümüşhane"
+  },
+  {
+   "key": "hakkari",
+   "name": "Hakkari"
+  },
+  {
+   "key": "hatay",
+   "name": "Hatay"
+  },
+  {
+   "key": "isparta",
+   "name": "Isparta"
+  },
+  {
+   "key": "mersin",
+   "name": "Mersin",
+   "aliases": [
+    "icel"
+   ],
+   "strict": true
+  },
+  {
+   "key": "istanbul",
+   "name": "İstanbul"
+  },
+  {
+   "key": "izmir",
+   "name": "İzmir"
+  },
+  {
+   "key": "kars",
+   "name": "Kars",
+   "strict": true
+  },
+  {
+   "key": "kastamonu",
+   "name": "Kastamonu"
+  },
+  {
+   "key": "kayseri",
+   "name": "Kayseri"
+  },
+  {
+   "key": "kirklareli",
+   "name": "Kırklareli"
+  },
+  {
+   "key": "kirsehir",
+   "name": "Kırşehir"
+  },
+  {
+   "key": "kocaeli",
+   "name": "Kocaeli",
+   "aliases": [
+    "izmit"
+   ]
+  },
+  {
+   "key": "konya",
+   "name": "Konya"
+  },
+  {
+   "key": "kutahya",
+   "name": "Kütahya"
+  },
+  {
+   "key": "malatya",
+   "name": "Malatya"
+  },
+  {
+   "key": "manisa",
+   "name": "Manisa"
+  },
+  {
+   "key": "kahramanmaras",
+   "name": "Kahramanmaraş",
+   "aliases": [
+    "maras"
+   ]
+  },
+  {
+   "key": "mardin",
+   "name": "Mardin"
+  },
+  {
+   "key": "mugla",
+   "name": "Muğla"
+  },
+  {
+   "key": "mus",
+   "name": "Muş",
+   "strict": true
+  },
+  {
+   "key": "nevsehir",
+   "name": "Nevşehir"
+  },
+  {
+   "key": "nigde",
+   "name": "Niğde"
+  },
+  {
+   "key": "ordu",
+   "name": "Ordu",
+   "strict": true
+  },
+  {
+   "key": "rize",
+   "name": "Rize"
+  },
+  {
+   "key": "sakarya",
+   "name": "Sakarya",
+   "aliases": [
+    "adapazari"
+   ]
+  },
+  {
+   "key": "samsun",
+   "name": "Samsun"
+  },
+  {
+   "key": "siirt",
+   "name": "Siirt"
+  },
+  {
+   "key": "sinop",
+   "name": "Sinop"
+  },
+  {
+   "key": "sivas",
+   "name": "Sivas"
+  },
+  {
+   "key": "tekirdag",
+   "name": "Tekirdağ"
+  },
+  {
+   "key": "tokat",
+   "name": "Tokat",
+   "strict": true
+  },
+  {
+   "key": "trabzon",
+   "name": "Trabzon"
+  },
+  {
+   "key": "tunceli",
+   "name": "Tunceli"
+  },
+  {
+   "key": "sanliurfa",
+   "name": "Şanlıurfa",
+   "aliases": [
+    "urfa"
+   ]
+  },
+  {
+   "key": "usak",
+   "name": "Uşak",
+   "strict": true
+  },
+  {
+   "key": "van",
+   "name": "Van",
+   "strict": true
+  },
+  {
+   "key": "yozgat",
+   "name": "Yozgat"
+  },
+  {
+   "key": "zonguldak",
+   "name": "Zonguldak"
+  },
+  {
+   "key": "aksaray",
+   "name": "Aksaray"
+  },
+  {
+   "key": "bayburt",
+   "name": "Bayburt"
+  },
+  {
+   "key": "karaman",
+   "name": "Karaman",
+   "strict": true
+  },
+  {
+   "key": "kirikkale",
+   "name": "Kırıkkale"
+  },
+  {
+   "key": "batman",
+   "name": "Batman",
+   "strict": true
+  },
+  {
+   "key": "sirnak",
+   "name": "Şırnak"
+  },
+  {
+   "key": "bartin",
+   "name": "Bartın"
+  },
+  {
+   "key": "ardahan",
+   "name": "Ardahan"
+  },
+  {
+   "key": "igdir",
+   "name": "Iğdır"
+  },
+  {
+   "key": "yalova",
+   "name": "Yalova"
+  },
+  {
+   "key": "karabuk",
+   "name": "Karabük"
+  },
+  {
+   "key": "kilis",
+   "name": "Kilis"
+  },
+  {
+   "key": "osmaniye",
+   "name": "Osmaniye"
+  },
+  {
+   "key": "duzce",
+   "name": "Düzce",
+   "strict": true
+  }
+ ]
+}

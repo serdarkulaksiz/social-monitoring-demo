@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}İnceleme · Sosyal Olay İzleme{% endblock %}
+{% block content %}
+<section class="wide">
+  <h1>İnceleme kuyruğu</h1>
+  <p>Sınıflandırmanın doğru olup olmadığını işaretleyin. Etiketiniz o gönderi için kuralların sonucunun yerine geçer; olay sayıları hemen güncellenir ve kalite ölçümüne katılır.</p>
+  <nav class="tabs" aria-label="Kuyruk türü">
+    <a href="/dashboard/review?mode=incidents"{% if mode.value == 'incidents' %} aria-current="page"{% endif %}>Olaydakiler</a>
+    <a href="/dashboard/review?mode=uncertain"{% if mode.value == 'uncertain' %} aria-current="page"{% endif %}>Belirsizler</a>
+    <a href="/dashboard/review?mode=random"{% if mode.value == 'random' %} aria-current="page"{% endif %}>Rastgele örnek</a>
+    <a href="/dashboard/review?mode=disagreement"{% if mode.value == 'disagreement' %} aria-current="page"{% endif %}>Model ile kural ayrışanlar</a>
+  </nav>
+  <p class="hint">
+    {% if mode.value == 'incidents' %}Aktif olaylarda sayılan ve henüz etiketlenmemiş gönderiler. Yanlış alarmları ayıklamak içindir.
+    {% elif mode.value == 'uncertain' %}Kuralların kararsız kaldığı gönderiler: düşük güven skoru, soru içinde şikâyet ya da sorun ifadesi olduğu hâlde şikâyet sayılmayanlar.
+    {% elif mode.value == 'disagreement' %}Metin modelinin kurallardan farklı karar verdiği (gölge modda: vereceği) gönderiler. Modelin en çok öğreneceği gönderiler bunlardır; etiketlemek modeli de kuralları da iyileştirir.
+    {% else %}Bankadan bahseden gönderilerden rastgele seçilmiş bir örnek. Kaçırılan şikâyetleri (recall) yalnızca bu örnek tarafsız ölçer; düzenli olarak biraz etiketlemek yeterlidir.{% endif %}
+    "Doğru" butonu, hizmet, sorun ve itibar sinyali dahil tüm alanların doğru olduğu anlamına gelir.
+  </p>
+  {% if items %}
+  <ol class="posts">
+    {% for item in items %}
+    <li>
+      {{ m.post_cell(item.post, item.engagement) }}
+      <div class="meta-row">{{ m.classification(item.analysis) }} <span class="muted">· {{ item.reason }}</span></div>
+      {{ m.label_buttons(item.post.post_id, 'review_' ~ mode.value, risk=item.analysis.risk_signals|length > 0) }}
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}<p class="empty">Bu kuyrukta etiketlenecek gönderi yok.</p>{% endif %}
+</section>
+{% endblock %}

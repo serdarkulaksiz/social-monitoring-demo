@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Yükselen konular · Sosyal Olay İzleme{% endblock %}
+{% block content %}
+<section class="wide">
+  <h1>Yükselen konular</h1>
+  <p>Kurallar yalnızca önceden tanımlı sorunları tanır. Bu sayfa son 2 saatte bankadan bahseden gönderilerde normalden belirgin şekilde daha çok kişinin kullandığı kelimeleri bulur ve benzer gönderileri gruplar. Alarm üretmez; yeni bir sorunu erken görmeye ve yeni kural yazmaya yardım eder.</p>
+</section>
+{% if topics %}
+{% for topic in topics %}
+<section class="wide topic">
+  <h2>{{ topic.label }}</h2>
+  <p>{{ topic.unique_users }} farklı kişi, {{ topic.posts }} gönderi · ilk görülme {{ topic.first_seen|tr_time('%d.%m %H:%M') }} · normalde beklenen {{ topic.expected_users|number }} kişi · tesadüf olasılığı {{ topic.p_value|probability }}</p>
+  <p>{% if topic.unrecognised_share >= 0.5 %}{{ m.badge('WARNING', 'Kurallarda karşılığı yok: %' ~ (topic.unrecognised_share * 100)|round|int) }}{% else %}Gönderilerin çoğu bilinen bir kategoriye düşüyor.{% endif %}
+     <span class="muted">Kategoriler: {% for key, count in topic.categories.items() %}{% set parts = key.split('/') %}{{ parts[0]|service }} / {{ parts[1]|issue }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</span></p>
+  <p class="muted small">Terimler: {{ topic.terms|join(', ') }}</p>
+  <ol class="posts">{% for post in topic.examples %}<li>{{ m.post_cell(post) }}</li>{% endfor %}</ol>
+</section>
+{% endfor %}
+{% else %}
+<section class="wide"><p class="empty">Şu an normalden belirgin şekilde sık geçen yeni bir konu yok.</p></section>
+{% endif %}
+{% endblock %}

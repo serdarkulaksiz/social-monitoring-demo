@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.1",
+  "batch_id": "b-20260101-000001",
+  "posts": [
+    {
+      "schema_version": "1.1",
+      "source": "synthetic",
+      "source_post_id": "synthetic-post-0001",
+      "author_id": "did:plc:demouser00000000000000001",
+      "author_handle": "demo-user-01.example.test",
+      "author_display_name": "Demo User 01",
+      "text": "Ziraat Mobil açılmıyor, sabahtan beri giriş yapamıyorum.",
+      "created_at": "2026-01-01T09:00:00Z",
+      "collected_at": "2026-01-01T09:01:30Z",
+      "url": null,
+      "engagement": {"like_count": 3, "repost_count": 1, "reply_count": 0, "quote_count": 0}
+    },
+    {
+      "schema_version": "1.0",
+      "source": "synthetic",
+      "source_post_id": "synthetic-post-0002",
+      "author_id": "0f1e2d3c4b5a69788796a5b4c3d2e1f0",
+      "text": "Ziraat ATM paramı vermedi.",
+      "created_at": "2026-01-01T09:00:40+00:00",
+      "collected_at": "2026-01-01T09:01:30+00:00",
+      "url": "https://example.invalid/synthetic/0002"
+    }
+  ]
+}

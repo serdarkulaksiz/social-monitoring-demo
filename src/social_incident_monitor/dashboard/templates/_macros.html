@@ -1,0 +1,45 @@
+{% macro badge(code, text) %}<span class="badge {{ code }}">{{ text }}</span>{% endmacro %}
+
+{% macro post_cell(post, engagement=None) %}
+<div class="post">
+  <div class="byline">
+    {% set profile = profile_url(post.author_id, post.source) %}
+    {% if post.author_display_name %}<strong>{{ post.author_display_name }}</strong>{% endif %}
+    {% if profile %}<a href="{{ profile }}" target="_blank" rel="noopener noreferrer">@{{ post.author_handle or post.author_id }}</a>{% else %}<span class="muted">@{{ post.author_handle or post.author_id }}</span>{% endif %}
+    <span class="muted">· {{ post.created_at|tr_time('%d.%m %H:%M') }}</span>
+    {% if post.url|safe_url %}· <a href="{{ post.url|safe_url }}" target="_blank" rel="noopener noreferrer">gönderiyi aç</a>{% endif %}
+    {% if post.query_id %}<span class="muted">· arama: {{ post.query_id }}</span>{% endif %}
+    {% if engagement %}<span class="muted">· {{ engagement.like_count }} beğeni, {{ engagement.repost_count }} paylaşım, {{ engagement.quote_count }} alıntı</span>{% endif %}
+  </div>
+  <p class="text">{{ post.text }}</p>
+</div>
+{% endmacro %}
+
+{% macro classification(analysis) %}
+<span class="classification">
+  {% if analysis.is_complaint %}Şikâyet: {{ analysis.service_category|service }} / {{ analysis.issue_category|issue }}{% elif analysis.is_bank_related %}Bankayla ilgili, şikâyet değil{% else %}Bankayla ilgisiz{% endif %}
+  {% for signal in analysis.risk_signals %} · <span class="risk">{{ signal|risk }}</span>{% endfor %}
+  {% if 'topic:fund' in analysis.matched_rules %} · <span class="topic">konu: fon / yatırım (alarm dışı)</span>{% endif %}
+  {% if analysis.label_source == 'feedback' %} · <span class="reviewed">analist etiketi</span>{% else %} · güven {{ analysis.confidence|number(2) }}{% endif %}
+</span>
+{% if analysis.text_model %}{% set tm = analysis.text_model %}
+<span class="model-view">model{% if tm.mode == 'shadow' %} (gölge){% endif %}: şikâyet {{ tm.p_complaint|percent }}{% if tm.explanation %} · {% if tm.p_complaint is not none and tm.p_complaint >= 0.5 %}şikâyet lehine{% else %}şikâyet aleyhine{% endif %}: {% for word, value in tm.explanation %}{{ word }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}{% if tm.path != 'rule' %} · <strong>{% if tm.applied %}model kararı uygulandı{% else %}model farklı karar verirdi{% endif %}</strong>{% endif %}</span>
+{% endif %}
+{% endmacro %}
+
+{% macro label_buttons(post_id, sample, risk=False) %}
+{% if actions_mode != 'off' %}
+<div class="labels" data-post="{{ post_id }}" data-sample="{{ sample }}">
+  <button type="button" data-action="feedback" data-verdict="confirm" title="Sınıflandırmanın tüm alanları doğru">Doğru</button>
+  <button type="button" data-action="feedback" data-verdict="not_complaint">Şikâyet değil</button>
+  <button type="button" data-action="feedback" data-verdict="not_bank_related">Bankayla ilgisiz</button>
+  {% if risk %}<button type="button" data-action="feedback" data-verdict="confirm" data-clear-risk="1">İtibar sinyali değil</button>{% endif %}
+  <details class="correct">
+    <summary>Kategori düzelt</summary>
+    <label>Hizmet <select class="service">{% for item in service_choices %}<option value="{{ item.value }}">{{ item|service }}</option>{% endfor %}</select></label>
+    <label>Sorun <select class="issue">{% for item in issue_choices %}<option value="{{ item.value }}">{{ item|issue }}</option>{% endfor %}</select></label>
+    <button type="button" data-action="feedback" data-verdict="complaint">Şikâyet olarak kaydet</button>
+  </details>
+</div>
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "social-incident-monitor"
+version = "0.1.0"
+description = "Banking complaint analysis, incident detection and alerting for collected social media posts."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.30,<1",
+    "pydantic>=2.9,<3",
+    "python-dotenv>=1.0,<2",
+    "jinja2>=3.1,<4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "httpx2>=2.16,<3",
+]
+
+[project.scripts]
+social-incident-monitor = "social_incident_monitor.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+social_incident_monitor = ["classification/*.json", "classification/model/bundled/*.json", "dashboard/templates/*.html", "dashboard/static/*"]

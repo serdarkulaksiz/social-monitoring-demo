@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Sosyal Olay İzleme{% endblock %}</title>
+<link rel="stylesheet" href="/dashboard/static/dashboard.css">
+<script src="/dashboard/static/dashboard.js" defer></script>
+</head>
+<body data-actions="{{ actions_mode }}"{% if refresh %} data-refresh="{{ refresh }}"{% endif %}>
+<header class="top">
+  <a class="brand" href="/dashboard">Sosyal Olay İzleme</a>
+  <nav aria-label="Sayfalar">
+    <a href="/dashboard"{% if page == 'overview' %} aria-current="page"{% endif %}>Genel bakış</a>
+    <a href="/dashboard/review"{% if page == 'review' %} aria-current="page"{% endif %}>İnceleme</a>
+    <a href="/dashboard/quality"{% if page == 'quality' %} aria-current="page"{% endif %}>Kalite</a>
+    <a href="/dashboard/topics"{% if page == 'topics' %} aria-current="page"{% endif %}>Yükselen konular</a>
+    <a href="/dashboard/reputation"{% if page == 'reputation' %} aria-current="page"{% endif %}>İtibar{% if reputation_active %} <span class="count">{{ reputation_active }}</span>{% endif %}</a>
+  </nav>
+  <div class="who">
+    {% if actions_mode != 'off' %}
+    <label>İşlemi yapan <input id="actor-name" maxlength="100" placeholder="Adınız" autocomplete="name"></label>
+    {% endif %}
+    {% if actions_mode == 'api_key' %}
+    <label>API anahtarı <input id="api-key" type="password" autocomplete="off"></label>
+    {% endif %}
+  </div>
+  <span class="meta">{{ generated_at|tr_time('%d.%m.%Y %H:%M:%S') }} UTC{% if refresh %} · {{ refresh }} sn'de yenilenir{% endif %}</span>
+</header>
+{% if synthetic_mode %}
+<div class="banner">SENTETİK VERİ MODU: Bu örnek yalnızca sentetik demo gönderilerini kabul eder. Burada gerçek sosyal medya verisi yoktur.</div>
+{% endif %}
+<div id="flash" class="flash" role="status" aria-live="polite" hidden></div>
+<main>
+{% block content %}{% endblock %}
+</main>
+<footer>Saatler UTC'dir (Türkiye saati = UTC+3). Kullanıcı adları ve gönderiler kişisel veridir; bu ekranı yalnızca yetkili kişiler kullanmalıdır.</footer>
+</body>
+</html>

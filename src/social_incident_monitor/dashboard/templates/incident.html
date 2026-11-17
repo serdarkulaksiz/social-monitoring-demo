@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}{{ incident.service_category|service }} · Olay · Sosyal Olay İzleme{% endblock %}
+{% block content %}
+<section class="wide">
+  <p class="crumbs"><a href="{{ '/dashboard/reputation' if reputation else '/dashboard' }}">{{ 'İtibar' if reputation else 'Genel bakış' }}</a> › Olay <code>{{ incident.incident_id }}</code></p>
+  <h1>{{ incident.service_category|service }} — {{ incident.issue_category|issue }}</h1>
+  <p>
+    {{ m.badge(incident.severity.value, 'En yüksek: ' ~ (incident.severity|severity)) }}
+    {{ m.badge(incident.current_level.value, 'Şu an: ' ~ (incident.current_level|severity)) }}
+    {{ m.badge(incident.status.value, incident.status|incident_status) }}
+  </p>
+  <p class="reason">{{ incident.detection_details|detection or incident.detection_reason }}</p>
+  {% if reputation %}<p class="notice sensitive">Hassas bilgi: itibar sinyalleri risk ve hazine ekibi içindir. Hiçbir otomatik dış aksiyon tetiklemez.</p>{% endif %}
+  <dl class="facts">
+    <div><dt>İlk şikâyet</dt><dd>{{ incident.first_complaint_at|tr_time('%d.%m.%Y %H:%M') }}</dd></div>
+    <div><dt>Açılış</dt><dd>{{ incident.opened_at|tr_time('%d.%m.%Y %H:%M') }}</dd></div>
+    <div><dt>Zirve</dt><dd>{{ incident.peak_unique_users_count }} kişi · {{ incident.peak_at|tr_time('%d.%m %H:%M') }}</dd></div>
+    <div><dt>Onay</dt><dd>{{ incident.acknowledged_at|tr_time('%d.%m %H:%M') }}{% if incident.acknowledged_by %} · {{ incident.acknowledged_by|actor }}{% endif %}</dd></div>
+    <div><dt>Çözüm</dt><dd>{{ incident.resolved_at|tr_time('%d.%m %H:%M') }}{% if incident.resolved_by %} · {{ incident.resolved_by|actor }}{% endif %}</dd></div>
+    <div><dt>İlk şikâyetten tespite</dt><dd>{{ timings.time_to_detect|duration }}</dd></div>
+    <div><dt>Tespitten onaya</dt><dd>{{ timings.time_to_acknowledge|duration }}</dd></div>
+    <div><dt>Tespitten çözüme</dt><dd>{{ timings.time_to_resolve|duration }}</dd></div>
+  </dl>
+  {% if incident.resolution_note %}<p><strong>Çözüm notu:</strong> {{ incident.resolution_note }}</p>{% endif %}
+  <p class="links"><a href="/dashboard/incidents/{{ incident.incident_id }}/report.md">Raporu indir (Markdown)</a> · <a href="/dashboard/incidents/{{ incident.incident_id }}/report" target="_blank" rel="noopener">Yazdırılabilir rapor</a></p>
+</section>
+
+{% if actions_mode != 'off' %}
+<section class="wide actions" data-incident="{{ incident.incident_id }}">
+  <h2>İşlemler</h2>
+  <label class="block">Not (isteğe bağlı; onay ve çözüm kaydına eklenir)
+    <textarea id="incident-note" rows="2" maxlength="2000"></textarea></label>
+  <div class="buttons">
+    {% if can_acknowledge %}<button type="button" data-action="acknowledge">Onayla</button>{% endif %}
+    {% if can_resolve %}<button type="button" data-action="resolve">Çözüldü olarak kapat</button>{% endif %}
+    <button type="button" data-action="note">Sadece not ekle</button>
+  </div>
+</section>
+{% endif %}
+
+<section class="wide">
+  <h2>Zaman içinde kişi sayısı</h2>
+  {{ chart }}
+  <p class="hint">Mavi çizgi: 5 dakikalık dilimde şikâyet eden farklı kişi sayısı. Kesikli çizgi: o saatler için normal beklenen (geçmiş yeterliyse). Dikey çizgiler: açılış, onay, çözüm.</p>
+</section>
+
+<section class="wide">
+  <h2>Zaman çizelgesi (denetim kaydı)</h2>
+  <p>{% if audit_ok %}{{ m.badge('HEALTHY', 'Kayıt bütünlüğü doğrulandı') }}{% else %}{{ m.badge('CRITICAL', 'Kayıt bütünlüğü DOĞRULANAMADI') }} <span class="muted">verify-audit komutunu çalıştırın.</span>{% endif %}</p>
+  {% if timeline %}
+  <div class="scroll"><table>
+    <thead><tr><th>Zaman</th><th>Olay</th><th>Kim</th><th>Ayrıntı</th><th>Kayıt özeti</th></tr></thead>
+    <tbody>
+    {% for event in timeline %}
+      <tr>
+        <td>{{ event.occurred_at|tr_time('%d.%m %H:%M:%S') }}</td>
+        <td>{{ event.event_type|audit_event }}</td>
+        <td>{{ event.actor|actor }}</td>
+        <td>
+          {% if event.details.get('note') %}{{ event.details['note'] }}{% endif %}
+          {% if event.event_type.value == 'RESOLVED' %}<div class="muted small">{{ event.details.get('reason', '') }}</div>{% endif %}
+          {% if event.event_type.value == 'FEEDBACK_APPLIED' %}Etiket: {{ event.details.get('verdict')|verdict }}{% endif %}
+          {% if event.event_type.value in ('OPENED', 'ESCALATED', 'LEVEL_CHANGED') %}{{ event.details.get('unique_users') }} kişi · {{ event.details.get('current_level')|severity }}{% endif %}
+        </td>
+        <td><code title="{{ event.record_hash }}">{{ event.record_hash[:12] }}</code></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty">Bu olay için denetim kaydı yok (kayıt özelliği eklenmeden önce açılmış olabilir).</p>{% endif %}
+</section>
+
+{% if cities %}
+<section>
+  <h2>Şehirler</h2>
+  <table class="dist"><tbody>
+    {% for key, count, bar in cities %}<tr><td>{{ key|province }}</td><td class="num">{{ count }} kişi</td><td>{{ bar }}</td></tr>{% endfor %}
+  </tbody></table>
+  <p class="hint">Gönderide geçen il adına göre; kesin konum değildir.</p>
+</section>
+{% endif %}
+
+<section class="wide">
+  <h2>Kanıt gönderileri</h2>
+  <p class="muted">{{ evidence.period_start|tr_time('%d.%m %H:%M') }} – {{ evidence.period_end|tr_time('%d.%m %H:%M') }} arası: {{ evidence.unique_users }} farklı kişiden {{ evidence.total_posts }} gönderi.{% if evidence.total_posts > evidence.posts|length %} İlk {{ evidence.posts|length }} gösteriliyor.{% endif %}</p>
+  {% if evidence.posts %}
+  <ol class="posts">
+    {% for item in evidence.posts %}
+    <li>
+      {{ m.post_cell(item.post, item.engagement) }}
+      <div class="meta-row">{{ m.classification(item.analysis) }}</div>
+      {{ m.label_buttons(item.post.post_id, 'incident_evidence', risk=reputation) }}
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}<p class="empty">Bu dönemde eşleşen gönderi yok (etiketler değiştirilmiş olabilir).</p>{% endif %}
+</section>
+{% endblock %}

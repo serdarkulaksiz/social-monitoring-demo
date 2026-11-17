@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:social-monitoring:contract:collector-monitor:v1",
+  "title": "Collector to Monitor REST contract v1",
+  "description": "Shared data contract between social-data-collector and social-incident-monitor. Both repositories keep an identical copy of this file. Minor versions (1.x) only add optional fields or new endpoints, so every 1.0 payload stays valid; any other change requires a new major contract version.",
+  "contract_version": "1.1",
+  "$defs": {
+    "Engagement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["like_count", "repost_count", "reply_count", "quote_count"],
+      "description": "Public interaction counters of a post at one point in time. Since 1.1.",
+      "properties": {
+        "like_count": {"type": "integer", "minimum": 0},
+        "repost_count": {"type": "integer", "minimum": 0},
+        "reply_count": {"type": "integer", "minimum": 0},
+        "quote_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "SocialPost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "source_post_id", "author_id", "text", "created_at", "collected_at"],
+      "properties": {
+        "schema_version": {"enum": ["1.0", "1.1"], "description": "Optional on a post: when missing, the batch's schema_version applies. Write it when posts of different versions share a batch (e.g. older posts still queued)."},
+        "source": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,31}$", "description": "Source platform identifier, e.g. bluesky."},
+        "source_post_id": {"type": "string", "minLength": 1, "maxLength": 512, "description": "Post identifier, unique within the source platform."},
+        "author_id": {"type": "string", "minLength": 1, "maxLength": 256, "description": "Stable author identifier on the source platform (Bluesky: the account DID), stored as is. Distinct users are counted by this value."},
+        "author_handle": {"type": ["string", "null"], "maxLength": 253, "description": "User name on the source platform at collection time (Bluesky: handle). Can change over time. Since 1.1."},
+        "author_display_name": {"type": ["string", "null"], "maxLength": 640, "description": "Display name at collection time. Since 1.1."},
+        "text": {"type": "string", "minLength": 1, "maxLength": 10000},
+        "created_at": {"type": "string", "format": "date-time", "description": "Publication time reported by the platform, timezone-aware."},
+        "collected_at": {"type": "string", "format": "date-time", "description": "Time the collector fetched the post, timezone-aware."},
+        "url": {"type": ["string", "null"], "maxLength": 2048},
+        "engagement": {"oneOf": [{"$ref": "#/$defs/Engagement"}, {"type": "null"}], "description": "Counters observed at collected_at. Since 1.1."},
+        "query_id": {"type": ["string", "null"], "minLength": 1, "maxLength": 64, "description": "Identifier of the sender's search or filter that found the post (e.g. ziraat_mobil). Stored and shown; not used for classification. Since 1.1."}
+      }
+    },
+    "PostsBatchRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "batch_id", "posts"],
+      "properties": {
+        "schema_version": {"enum": ["1.0", "1.1"]},
+        "batch_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "posts": {"type": "array", "minItems": 1, "maxItems": 500, "items": {"type": "object"}, "description": "Each item must satisfy SocialPost. Items are validated individually; invalid items are reported in 'rejected'."}
+      }
+    },
+    "PostsBatchResponse": {
+      "type": "object",
+      "required": ["batch_id", "received", "accepted", "duplicates", "rejected"],
+      "properties": {
+        "batch_id": {"type": "string"},
+        "received": {"type": "integer", "minimum": 0},
+        "accepted": {"type": "integer", "minimum": 0},
+        "duplicates": {"type": "integer", "minimum": 0},
+        "rejected": {"$ref": "#/$defs/RejectedItems"}
+      }
+    },
+    "EngagementUpdate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "source_post_id", "observed_at", "engagement"],
+      "description": "Newer counters for a post that was delivered earlier. Since 1.1.",
+      "properties": {
+        "source": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,31}$"},
+        "source_post_id": {"type": "string", "minLength": 1, "maxLength": 512},
+        "observed_at": {"type": "string", "format": "date-time", "description": "Time the counters were read from the platform, timezone-aware."},
+        "engagement": {"$ref": "#/$defs/Engagement"}
+      }
+    },
+    "EngagementBatchRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "batch_id", "updates"],
+      "description": "POST /api/v1/posts/engagement. Since 1.1.",
+      "properties": {
+        "schema_version": {"const": "1.1"},
+        "batch_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "updates": {"type": "array", "minItems": 1, "maxItems": 500, "items": {"type": "object"}, "description": "Each item must satisfy EngagementUpdate. Items are validated individually; invalid items are reported in 'rejected'."}
+      }
+    },
+    "EngagementBatchResponse": {
+      "type": "object",
+      "required": ["batch_id", "received", "applied", "stale", "unknown", "rejected"],
+      "properties": {
+        "batch_id": {"type": "string"},
+        "received": {"type": "integer", "minimum": 0},
+        "applied": {"type": "integer", "minimum": 0, "description": "Updates stored as the newest counters of their post."},
+        "stale": {"type": "integer", "minimum": 0, "description": "Updates not newer than the counters already stored (ignored, idempotent)."},
+        "unknown": {"type": "integer", "minimum": 0, "description": "Updates for posts the monitor has not stored (ignored)."},
+        "rejected": {"$ref": "#/$defs/RejectedItems"}
+      }
+    },
+    "RejectedItems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["index", "reason"],
+        "properties": {
+          "index": {"type": "integer", "minimum": 0},
+          "source_post_id": {"type": ["string", "null"]},
+          "reason": {"type": "string"}
+        }
+      }
+    },
+    "QueryRunResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["query_id", "status", "fetched_count"],
+      "properties": {
+        "query_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "status": {"enum": ["success", "failed"]},
+        "fetched_count": {"type": "integer", "minimum": 0},
+        "truncated": {"type": "boolean", "description": "True when the page limit stopped pagination before the source ran out of results."},
+        "error_message": {"type": ["string", "null"], "maxLength": 1000}
+      }
+    },
+    "CollectorRunReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "run_id", "source", "started_at", "finished_at", "status", "fetched_count", "new_count", "sent_count", "pending_count"],
+      "properties": {
+        "schema_version": {"enum": ["1.0", "1.1"]},
+        "run_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "source": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,31}$"},
+        "collector_version": {"type": ["string", "null"], "maxLength": 32},
+        "started_at": {"type": "string", "format": "date-time"},
+        "finished_at": {"type": "string", "format": "date-time"},
+        "status": {"enum": ["success", "partial", "failed"], "description": "Collection status. 'success' with zero fetched posts is valid and is not a failure."},
+        "queries": {"type": "array", "items": {"$ref": "#/$defs/QueryRunResult"}},
+        "fetched_count": {"type": "integer", "minimum": 0},
+        "new_count": {"type": "integer", "minimum": 0},
+        "sent_count": {"type": "integer", "minimum": 0},
+        "pending_count": {"type": "integer", "minimum": 0},
+        "error_message": {"type": ["string", "null"], "maxLength": 2000}
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "required": ["error"],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {"type": "string"},
+            "message": {"type": "string"},
+            "details": {}
+          }
+        }
+      }
+    }
+  }
+}

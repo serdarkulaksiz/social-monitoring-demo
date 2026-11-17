@@ -1,0 +1,46 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python bytecode and build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Test and tool caches (tests are configured never to create these; listed as a safeguard)
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Runtime data and logs
+data/
+logs/
+*.log
+*.jsonl
+!tests/fixtures/**/*.jsonl
+!examples/**/*.jsonl
+
+# Offline installation artifacts
+wheelhouse/
+*.whl
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Text model files and datasets (built from real posts)
+models/
+datasets/

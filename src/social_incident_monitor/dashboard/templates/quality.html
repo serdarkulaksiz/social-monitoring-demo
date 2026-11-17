@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Kalite · Sosyal Olay İzleme{% endblock %}
+{% macro scores(report, title) %}
+<section>
+  <h2>{{ title }}</h2>
+  {% if report.labelled %}
+  <table><tbody>
+    <tr><td>Etiketli gönderi</td><td class="num">{{ report.labelled }}</td></tr>
+    <tr><td>Kesinlik (precision): şikâyet dediklerinin doğru olanı</td><td class="num">{{ report.complaint.precision|percent }}</td></tr>
+    <tr><td>Yakalama (recall): gerçek şikâyetlerden yakalanan</td><td class="num">{{ report.complaint.recall|percent }}</td></tr>
+    <tr><td>Doğruluk (accuracy)</td><td class="num">{{ report.complaint.accuracy|percent }}</td></tr>
+    <tr><td>Kategori doğruluğu (hizmet ve sorun)</td><td class="num">{{ report.category_accuracy|percent }}</td></tr>
+  </tbody></table>
+  <table class="matrix">
+    <thead><tr><th></th><th>Analist: şikâyet</th><th>Analist: değil</th></tr></thead>
+    <tbody>
+      <tr><th>Kurallar: şikâyet</th><td>{{ report.complaint.true_positive }}</td><td>{{ report.complaint.false_positive }}</td></tr>
+      <tr><th>Kurallar: değil</th><td>{{ report.complaint.false_negative }}</td><td>{{ report.complaint.true_negative }}</td></tr>
+    </tbody>
+  </table>
+  {% else %}<p class="empty">Henüz etiket yok.</p>{% endif %}
+</section>
+{% endmacro %}
+{% block content %}
+<section class="wide">
+  <h1>Sınıflandırma kalitesi</h1>
+  <p>Analist etiketleri ile kuralların o anki tahmini karşılaştırılır. Alarmlar üzerinden verilen etiketler hatalara yoğunlaştığı için genel tabloyu kötümser gösterir; tarafsız ölçüm için <a href="/dashboard/review?mode=random">rastgele örnek</a> kuyruğunu etiketleyin.</p>
+  {% if overall.versions %}<p class="muted">Kural sürümleri: {% for version, count in overall.versions.items() %}{{ version }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %} · Etiketin verildiği yer: {% for name, count in overall.samples.items() %}{{ name|sample }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+</section>
+<section class="wide">
+  <h2>Metin modeli (son 7 gün)</h2>
+  {% if model.analysed %}
+  <p>{{ model.analysed }} gönderi modelle de değerlendirildi. Sürüm: {% for version, count in model.versions.items() %}{{ version }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %} · Mod: {% for mode, count in model.modes.items() %}{% if mode == 'shadow' %}gölge{% else %}aktif{% endif %} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</p>
+  <table><tbody>
+    <tr><td>Kuralların kaçırdığı, modelin şikâyet bulduğu</td><td class="num">{{ model.paths.get('model_rescue', 0) }}</td></tr>
+    <tr><td>Kuralların şikâyet / ilgili dediği, modelin reddettiği</td><td class="num">{{ model.paths.get('model_veto', 0) }}</td></tr>
+    <tr><td>Modelin hizmet veya sorunu tamamladığı</td><td class="num">{{ model.paths.get('model_category', 0) }}</td></tr>
+    <tr><td>Bunlardan uygulanan (aktif mod)</td><td class="num">{{ model.applied }}</td></tr>
+  </tbody></table>
+  <p class="hint">Bu gönderileri <a href="/dashboard/review?mode=disagreement">Model ile kural ayrışanlar</a> kuyruğunda etiketleyin. Modelin kurallardan iyi olup olmadığını kesin olarak <code>evaluate --model</code> komutu kilitli test setinde ölçer.</p>
+  {% else %}<p class="empty">Metin modeli kullanılmıyor (MONITOR_CLASSIFIER=hybrid ile açılır) ya da henüz gönderi gelmedi.</p>{% endif %}
+</section>
+{{ scores(unbiased, "Rastgele örnek (tarafsız)") }}
+{{ scores(overall, "Tüm etiketler") }}
+{% if overall.by_service %}
+<section class="wide">
+  <h2>Hizmete göre (gerçek şikâyetler)</h2>
+  <table>
+    <thead><tr><th>Hizmet</th><th>Şikâyet</th><th>Kategorisi doğru bulunan</th></tr></thead>
+    <tbody>{% for item in overall.by_service %}<tr><td>{{ item.service|service }}</td><td class="num">{{ item.labelled_complaints }}</td><td class="num">{{ item.correct_category }}</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

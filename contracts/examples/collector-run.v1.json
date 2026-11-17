@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.1",
+  "run_id": "run-20260101-090000-0001",
+  "source": "bluesky",
+  "collector_version": "0.1.0",
+  "started_at": "2026-01-01T09:00:00Z",
+  "finished_at": "2026-01-01T09:00:12Z",
+  "status": "partial",
+  "queries": [
+    {"query_id": "ziraat_mobil", "status": "success", "fetched_count": 12, "truncated": false, "error_message": null},
+    {"query_id": "ziraat_atm", "status": "failed", "fetched_count": 0, "truncated": false, "error_message": "HTTP 503 from source"}
+  ],
+  "fetched_count": 12,
+  "new_count": 9,
+  "sent_count": 9,
+  "pending_count": 0,
+  "error_message": "1 of 2 queries failed"
+}

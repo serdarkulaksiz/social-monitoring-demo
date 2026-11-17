@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}İtibar · Sosyal Olay İzleme{% endblock %}
+{% block content %}
+<div class="notice sensitive">HASSAS: Bu sayfa banka hakkında batma/iflas söylentilerini, para çekme ve hesap kapatma paylaşımlarını ve para çekme çağrılarını gösterir. Risk ve hazine ekibi içindir; hiçbir otomatik dış aksiyon tetiklemez.</div>
+<section class="wide">
+  <h1>İtibar ve mevduat riski sinyalleri</h1>
+  <p>Seviye iki şeye göre yükselir: konu hakkında yazan farklı kişi sayısı ve paylaşımların yayılımı (her kişinin en çok paylaşılan gönderisinin yeniden paylaşım + alıntı sayısı). Aynı kişinin birden çok gönderisi tek kişi sayılır.</p>
+  {% if signal_counts %}<p>Son 24 saat: {% for signal, count in signal_counts.items() %}{{ signal|risk }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+</section>
+<section class="wide">
+  <h2>Aktif sinyaller</h2>
+  {% if active %}
+  <table>
+    <thead><tr><th>Seviye</th><th>Sinyal</th><th>Kişi</th><th>Yayılım</th><th>Açılış</th><th></th></tr></thead>
+    <tbody>{% for incident in active %}
+      <tr><td>{{ m.badge(incident.severity.value, incident.severity|severity) }}</td><td>{{ incident.issue_category|issue }}</td>
+        <td>{{ incident.unique_users_count }}</td><td>{{ incident.detection_details.get('amplification', 0) }}</td>
+        <td>{{ incident.opened_at|tr_time('%d.%m %H:%M') }}</td><td><a href="/dashboard/incidents/{{ incident.incident_id }}">Detay</a></td></tr>
+    {% endfor %}</tbody>
+  </table>
+  {% else %}<p class="empty">Aktif itibar sinyali yok.</p>{% endif %}
+  {% if recent %}<p class="muted">Son kapananlar: {% for incident in recent %}<a href="/dashboard/incidents/{{ incident.incident_id }}">{{ incident.issue_category|issue }} ({{ incident.opened_at|tr_time('%d.%m') }})</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+</section>
+<section class="wide">
+  <h2>Son 24 saatin sinyal içeren gönderileri (en çok yayılan önce)</h2>
+  {% if posts %}
+  <ol class="posts">
+    {% for post, analysis, engagement in posts %}
+    <li>
+      {{ m.post_cell(post, engagement) }}
+      <div class="meta-row">{{ m.classification(analysis) }}</div>
+      {{ m.label_buttons(post.post_id, 'reputation', risk=True) }}
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}<p class="empty">Son 24 saatte sinyal içeren gönderi yok.</p>{% endif %}
+</section>
+{% endblock %}

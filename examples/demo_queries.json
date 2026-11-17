@@ -1,0 +1,5 @@
+{
+  "queries": [
+    {"query_id": "demo_ziraat", "text": "Ziraat", "enabled": true}
+  ]
+}

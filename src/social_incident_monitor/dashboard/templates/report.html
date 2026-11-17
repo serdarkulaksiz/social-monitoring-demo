@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Olay raporu {{ incident.incident_id }}</title>
+<link rel="stylesheet" href="/dashboard/static/dashboard.css">
+</head>
+<body class="print">
+<main class="report">
+  <h1>Olay raporu: {{ incident.service_category|service }} — {{ incident.issue_category|issue }}</h1>
+  <p>Olay kimliği <code>{{ incident.incident_id }}</code> · Durum {{ incident.status|incident_status }} · En yüksek seviye {{ incident.severity|severity }} · Rapor zamanı {{ report.generated_at|tr_time('%d.%m.%Y %H:%M') }} UTC</p>
+  <h2>Tespit gerekçesi</h2>
+  <p>{{ incident.detection_details|detection or incident.detection_reason }}</p>
+  <h2>Süreler</h2>
+  <table><tbody>
+    <tr><td>İlk şikâyet</td><td>{{ incident.first_complaint_at|tr_time('%d.%m.%Y %H:%M') }}</td></tr>
+    <tr><td>Açılış</td><td>{{ incident.opened_at|tr_time('%d.%m.%Y %H:%M') }}</td></tr>
+    <tr><td>Onay</td><td>{{ incident.acknowledged_at|tr_time('%d.%m.%Y %H:%M') }} {{ incident.acknowledged_by|actor if incident.acknowledged_by else '' }}</td></tr>
+    <tr><td>Çözüm</td><td>{{ incident.resolved_at|tr_time('%d.%m.%Y %H:%M') }} {{ incident.resolved_by|actor if incident.resolved_by else '' }}</td></tr>
+    <tr><td>İlk şikâyetten tespite</td><td>{{ timings.time_to_detect|duration }}</td></tr>
+    <tr><td>Tespitten onaya</td><td>{{ timings.time_to_acknowledge|duration }}</td></tr>
+    <tr><td>Tespitten çözüme</td><td>{{ timings.time_to_resolve|duration }}</td></tr>
+  </tbody></table>
+  {{ chart }}
+  <h2>Zaman çizelgesi</h2>
+  <table>
+    <thead><tr><th>Zaman</th><th>Olay</th><th>Kim</th><th>Ayrıntı</th><th>Kayıt özeti</th></tr></thead>
+    <tbody>{% for event in report.timeline %}
+      <tr><td>{{ event.occurred_at|tr_time('%d.%m %H:%M:%S') }}</td><td>{{ event.event_type|audit_event }}</td><td>{{ event.actor|actor }}</td>
+        <td>{{ event.details.get('note') or event.details.get('reason') or '' }}</td><td><code>{{ event.record_hash[:12] }}</code></td></tr>
+    {% endfor %}</tbody>
+  </table>
+  <p>Denetim kaydı bütünlüğü: <strong>{{ 'doğrulandı' if report.audit_trail_verified else 'DOĞRULANAMADI' }}</strong></p>
+  <h2>Kanıt gönderileri ({{ report.evidence.unique_users }} kişi, {{ report.evidence.total_posts }} gönderi)</h2>
+  <table>
+    <thead><tr><th>Zaman</th><th>Kullanıcı</th><th>Gönderi</th></tr></thead>
+    <tbody>{% for item in report.evidence.posts %}
+      <tr><td>{{ item.post.created_at|tr_time('%d.%m %H:%M') }}</td><td>{{ item.post.author_display_name or '' }} @{{ item.post.author_handle or item.post.author_id }}</td><td>{{ item.post.text }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+  <p class="disclaimer">Bu rapor kamuya açık sosyal medya sinyallerini özetler. Bir olayın regülatöre bildirilip bildirilmeyeceği kararına girdi sağlar; bu kararın yerine geçmez.</p>
+</main>
+</body>
+</html>

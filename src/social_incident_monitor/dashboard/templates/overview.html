@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m with context %}
+{% block title %}Genel bakış · Sosyal Olay İzleme{% endblock %}
+{% block content %}
+{% if stats.storage_corrupt_lines.values()|select|list %}
+<div class="notice">Bazı kayıt satırları okunamadığı için atlandı:
+  {% for name, count in stats.storage_corrupt_lines.items() if count %}{{ name }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}.
+  Ayrıntı için TROUBLESHOOTING.md.</div>
+{% endif %}
+{% if stats.baseline and not stats.baseline.ready %}
+<div class="notice info">Normal seviye (baseline) kuralı için {{ stats.baseline.history_days|number }} günlük veri var; {{ stats.baseline.min_history_days }} gün dolunca devreye girer. O zamana kadar sabit eşikler çalışır.</div>
+{% endif %}
+
+<section class="wide">
+  <h2>Özet</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="value">{{ stats.total_posts }}</div><div class="label">Toplam gönderi</div></div>
+    <div class="kpi"><div class="value">{{ stats.bank_related_posts }}</div><div class="label">Bankayla ilgili</div></div>
+    <div class="kpi"><div class="value">{{ stats.complaints }}</div><div class="label">Şikâyet</div></div>
+    <div class="kpi"><div class="value">{{ incidents|length }}</div><div class="label">Açık hizmet olayı</div></div>
+    <div class="kpi"><div class="value">{{ reputation_active }}</div><div class="label"><a href="/dashboard/reputation">Aktif itibar sinyali</a></div></div>
+  </div>
+</section>
+
+<section class="wide">
+  <h2>Aktif hizmet olayları</h2>
+  {% if incidents %}
+  <div class="scroll"><table>
+    <thead><tr><th>Seviye</th><th>Durum</th><th>Hizmet / sorun</th><th>Kişi (zirve)</th><th>Şikâyet</th><th>Son 2 saat</th><th>Açılış</th><th></th></tr></thead>
+    <tbody>
+    {% for row in incidents %}{% set incident = row.incident %}
+      <tr>
+        <td>{{ m.badge(incident.severity.value, incident.severity|severity) }}{% if incident.current_level != incident.severity %}<div class="muted small">şu an {{ incident.current_level|severity }}</div>{% endif %}</td>
+        <td>{{ m.badge(incident.status.value, incident.status|incident_status) }}</td>
+        <td><strong>{{ incident.service_category|service }}</strong><div class="muted">{{ incident.issue_category|issue }}</div></td>
+        <td>{{ incident.unique_users_count }} ({{ incident.peak_unique_users_count }})</td>
+        <td>{{ incident.complaints_count }}</td>
+        <td>{{ row.spark }}</td>
+        <td>{{ incident.opened_at|tr_time('%d.%m %H:%M') }}</td>
+        <td><a href="/dashboard/incidents/{{ incident.incident_id }}">Detay</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty">Aktif hizmet olayı yok.</p>{% endif %}
+</section>
+
+<section class="wide">
+  <h2>Şikâyet eğilimi (son 6 saat)</h2>
+  {{ trend }}
+</section>
+
+<section>
+  <h2>Şikâyet yoğunluğu</h2>
+  {% if stats.windows %}
+  <table>
+    <thead><tr><th>Pencere</th><th>Kişi</th><th>Şikâyet</th><th>En yoğun grup</th></tr></thead>
+    <tbody>
+    {% for window in stats.windows %}
+      <tr><td>Son {{ window.window_minutes }} dk</td><td>{{ window.unique_users_count }}</td><td>{{ window.complaints_count }}</td>
+        <td>{% if window.groups %}{{ window.groups[0].service|service }} / {{ window.groups[0].issue|issue }} ({{ window.groups[0].unique_users_count }} kişi){% else %}-{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Veri toplama sağlığı</h2>
+  {% if stats.collector_health %}
+  <table>
+    <thead><tr><th>Kaynak</th><th>Durum</th><th>Son başarılı</th><th>Alınan / gönderilen / bekleyen</th></tr></thead>
+    <tbody>
+    {% for health in stats.collector_health %}
+      <tr><td>{{ health.source }}</td><td>{{ m.badge(health.status.value, health.status|health) }}<div class="muted small">{{ health.detail }}</div></td>
+        <td>{{ health.last_success_at|tr_time('%d.%m %H:%M') }}</td>
+        <td>{{ health.last_fetched_count }} / {{ health.last_sent_count }} / {{ health.pending_count }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty">Henüz collector raporu gelmedi (durum: BİLİNMİYOR). Monitor collector olmadan da çalışır.</p>{% endif %}
+</section>
+
+<section>
+  <h2>Hizmete göre şikâyetler</h2>
+  {% if by_service %}<table class="dist"><tbody>
+    {% for name, count, bar in by_service %}<tr><td>{{ name|service }}</td><td class="num">{{ count }}</td><td>{{ bar }}</td></tr>{% endfor %}
+  </tbody></table>{% else %}<p class="empty">Şikâyet yok.</p>{% endif %}
+</section>
+
+<section>
+  <h2>Soruna göre şikâyetler</h2>
+  {% if by_issue %}<table class="dist"><tbody>
+    {% for name, count, bar in by_issue %}<tr><td>{{ name|issue }}</td><td class="num">{{ count }}</td><td>{{ bar }}</td></tr>{% endfor %}
+  </tbody></table>{% else %}<p class="empty">Şikâyet yok.</p>{% endif %}
+</section>
+
+<section>
+  <h2>Şehirler (son 24 saat)</h2>
+  {% if locations %}<table class="dist"><tbody>
+    {% for item, bar in locations %}<tr><td>{{ item.name }}</td><td class="num">{{ item.unique_users }} kişi</td><td>{{ bar }}</td></tr>{% endfor %}
+  </tbody></table>
+  <p class="hint">Gönderide geçen il adına göre. Kesin konum değil, ipucudur.</p>
+  {% else %}<p class="empty">Son 24 saatteki şikâyetlerde il adı geçmiyor.</p>{% endif %}
+</section>
+
+<section>
+  <h2>Yükselen konular</h2>
+  {% if topics %}
+  <ul class="topics">
+    {% for topic in topics %}<li><strong>{{ topic.label }}</strong> <span class="muted">· {{ topic.unique_users }} kişi · ilk {{ topic.first_seen|tr_time('%H:%M') }}</span></li>{% endfor %}
+  </ul>
+  {% else %}<p class="empty">Şu an normalden belirgin şekilde sık geçen yeni bir konu yok.</p>{% endif %}
+  <p class="hint"><a href="/dashboard/topics">Tüm konular ve açıklaması</a></p>
+</section>
+
+<section>
+  <h2>Olay süreleri (son 30 gün)</h2>
+  <table><tbody>
+    <tr><td>Olay sayısı</td><td class="num">{{ metrics.incidents }}</td></tr>
+    <tr><td>İlk şikâyetten tespite (medyan)</td><td class="num">{{ metrics.median_time_to_detect|duration }}</td></tr>
+    <tr><td>Tespitten onaya (medyan)</td><td class="num">{{ metrics.median_time_to_acknowledge|duration }}</td></tr>
+    <tr><td>Tespitten çözüme (medyan)</td><td class="num">{{ metrics.median_time_to_resolve|duration }}</td></tr>
+  </tbody></table>
+</section>
+
+<section class="wide">
+  <h2>Son alarmlar</h2>
+  {% if alerts %}
+  <div class="scroll"><table>
+    <thead><tr><th>Seviye</th><th>Tür</th><th>Durum</th><th>Hizmet / sorun</th><th>Kişi</th><th>Zaman</th><th></th></tr></thead>
+    <tbody>
+    {% for alert in alerts %}
+      <tr>
+        <td>{{ m.badge(alert.severity.value, alert.severity|severity) }}</td>
+        <td>{{ alert.alert_type|alert_type }}</td>
+        <td>{{ m.badge(alert.status.value, alert.status|alert_status) }}</td>
+        <td>{% if alert.alert_type.value == 'COLLECTOR_HEALTH' %}{{ alert.service }} · {{ alert.issue_category|condition }}{% else %}{{ alert.service|service }} / {{ alert.issue_category|issue }}{% endif %}</td>
+        <td>{{ alert.unique_users_count }}</td>
+        <td>{{ alert.detected_at|tr_time('%d.%m %H:%M') }}</td>
+        <td>{% if alert.incident_id %}<a href="/dashboard/incidents/{{ alert.incident_id }}">Olay</a>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty">Alarm yok.</p>{% endif %}
+</section>
+{% endblock %}

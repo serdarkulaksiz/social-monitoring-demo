@@ -1,0 +1,123 @@
+{
+  "rules_version": "tr-1.4",
+  "notes": "Patterns are Python regular expressions applied to folded text (lowercase, Turkish diacritics removed, punctuation collapsed). Every pattern is anchored to the start of a word, so Turkish suffixes still match (e.g. 'atm' matches 'atmden'). Service and issue lists are ordered by priority: the first match wins.",
+  "brand_patterns": ["ziraat"],
+  "bank_entity_patterns": ["ziraat ?bank", "bankkart"],
+  "other_institution_notes": "Separate institutions whose names contain the brand. Their mentions are removed before the brand check, so a post only about them is not about the bank.",
+  "other_institution_patterns": ["ziraat katilim\\w*"],
+  "other_bank_notes": "Other banks. Their names do not change the decision; they are recorded (matched rule 'other_bank') so the text model can learn that the post may be about another bank.",
+  "other_bank_patterns": ["yapi ?kredi", "vakif ?bank", "halk ?bank", "akbank", "garanti", "is ?bank", "sekerbank", "qnb", "finansbank", "enpara", "denizbank", "teb(?![a-z])", "ing bank", "kuveyt ?turk", "albaraka", "papara"],
+  "official_accounts_notes": "The bank's own accounts (handles without @, lowercase). Their posts are about the bank but never complaints.",
+  "official_accounts": ["ziraatdestek", "ziraatbankasi", "ziraatyatirim", "ziraatportfoy", "bankkart", "ziraatkatilim", "zkdestek"],
+  "hashtag_notes": "Problem words inside hashtags (#cokTU) are not problem phrases: trending political hashtags are pasted under unrelated posts. The bank's name in a hashtag still counts.",
+  "exclusion_contexts": [
+    {
+      "name": "sports",
+      "patterns": ["kupa", "turkiye kupasi", "mac(i|in|ta|tan|a|lar)?(?![a-z])", "voleybol", "basketbol", "futbol", "takim", "lig(?![a-z])", "ligi", "sampiyon", "gol(?![a-z])", "skor", "sezon", "galibiyet", "maglubiyet", "kazandi", "spor"]
+    },
+    {
+      "name": "agriculture_education",
+      "patterns": ["muhendis", "tarim", "zirai", "fakulte", "universite", "ogrenci", "hasat", "tohum", "sera(?![a-z])", "ziraat odasi", "ziraat yuksek"]
+    }
+  ],
+  "services": [
+    {"category": "atm", "patterns": ["atm", "bankamatik"]},
+    {"category": "fast_eft_transfer", "patterns": ["fast(?![a-z])", "eft(?![a-z])", "havale", "para transfer", "transfer", "para gonder", "iban"]},
+    {"category": "card", "patterns": ["kredi kart", "banka kart", "bankkart", "kart(i|im|imi|imla|la|ta|tan|a|in|lar|larim)?(?![a-z])", "sanal kart"]},
+    {"category": "pos", "patterns": ["pos(?![a-z])", "pos(u|un|da|dan|lar|lari|larda|lardan|larin|larimiz)(?![a-z])", "pos cihaz", "sanal pos", "uye isyeri"]},
+    {"category": "payments", "patterns": ["odeme", "fatura", "vergi", "sgk", "otomatik odeme"]},
+    {"category": "internet_banking", "patterns": ["internet (subesi|bankacilig)", "online bankacilik", "web (sitesi|sube)"]},
+    {"category": "mobile_banking", "patterns": ["ziraat mobil", "mobil(?!ya)", "uygulama", "app(?![a-z])"]},
+    {"category": "customer_service", "patterns": ["musteri hizmetleri", "cagri merkezi", "444 ?00 ?00", "temsilci", "sube(de|ye|den|ler)(?![a-z])"]}
+  ],
+  "issues": [
+    {
+      "category": "fraud_unauthorized",
+      "severity": "high",
+      "patterns": ["hesab\\w* (para )?cekil(mis|di)", "haberim olmadan", "bilgim (disinda|olmadan)", "yetkisiz (islem|cekim|harcama|odeme|giris)", "yapmadigim (islem|harcama|odeme|alisveris|cekim)", "kart\\w* kopyalan", "dolandiril", "dolandirici", "hesab\\w* (bosaltil|hacklen|ele gecir)"]
+    },
+    {
+      "category": "login_failure",
+      "severity": "medium",
+      "patterns": ["giris yapam", "giris yapilam", "giremiyor", "giremedim", "giris (hatasi|sorunu|olmuyor)", "oturum acam", "sifre(m|yi|mi)? (kabul etmiyor|hatali|yanlis)", "dogrulama kodu (gelmiyor|gelmedi)", "sms (gelmiyor|gelmedi)", "hesabim kilitlendi"]
+    },
+    {
+      "category": "atm_failure",
+      "severity": "high",
+      "implies_service": "atm",
+      "patterns": ["para(mi|yi)? vermedi", "kart(imi|i) yuttu", "parami yuttu", "atm\\w* (calismiyor|bozuk|hata|para vermiyor)"]
+    },
+    {
+      "category": "transaction_delay",
+      "severity": "medium",
+      "patterns": ["(fast|eft|havale|para|islem)\\w* (gecikti|gecikiyor|hala gelmedi|beklemede|askida)", "gecikme", "saatlerdir gelmedi"]
+    },
+    {
+      "category": "transfer_failure",
+      "severity": "high",
+      "implies_service": "fast_eft_transfer",
+      "patterns": ["(fast|eft|havale|transfer)\\w*( \\w+)? (yapam|yapilam|gitmedi|gitmiyor|gerceklesmedi|basarisiz|hata)", "para (gitmedi|gitmiyor|gonderemiyor|gonderemedim|ulasmadi)"]
+    },
+    {
+      "category": "payment_failure",
+      "severity": "high",
+      "implies_service": "payments",
+      "patterns": ["(odeme|fatura)\\w*( \\w+)? (yapam|yapilam|hata|basarisiz|gecmedi|alinmadi)"]
+    },
+    {
+      "category": "card_failure",
+      "severity": "medium",
+      "implies_service": "card",
+      "patterns": ["kart\\w* (calismiyor|gecmiyor|bloke|hata|reddedildi|kullanam)"]
+    },
+    {
+      "category": "customer_service_unreachable",
+      "severity": "low",
+      "implies_service": "customer_service",
+      "patterns": ["(musteri hizmetleri|cagri merkezi|temsilci)\\w* (ulasam|ulasilam|cevap vermiyor|acmiyor|baglanam)"]
+    },
+    {
+      "category": "application_unavailable",
+      "severity": "medium",
+      "yields_to_service_default": true,
+      "patterns": ["acilmiyor", "calismiyor", "coktu", "cokmus", "cokuyor", "erisilemiyor", "erisemiyorum", "baglanamiyorum", "baglanti hatasi", "hizmet veremiyor", "yanit vermiyor", "surekli donuyor", "kendiliginden kapaniyor"]
+    }
+  ],
+  "all_channels_notes": "A general outage: the problem phrase is an outage ('coktu', 'acilmiyor') and the post names no channel, several channels, or the whole system. Service becomes all_channels.",
+  "all_channels_patterns": ["tum sistem\\w*", "sistemler\\w*", "sistemi(niz)? (coktu|cokmus)", "tum hizmet\\w*", "hicbir (sey|islem|kanal|hizmet)\\w*", "tum kanal\\w*", "hepsi (coktu|cokmus|calismiyor)"],
+  "topic_notes": "Topics that are not service problems of the bank. A post on the fund topic (fund liquidation, investment funds) is about the bank but never counted as a complaint, so it never raises an alarm.",
+  "topics": {
+    "fund": ["fon(?![a-z])", "fon(u|un|a|da|dan|lar|lari|larin|larda|lardan|umuz|umu|larimiz)(?![a-z])", "tasfiye\\w*", "ppf\\w*", "tefas", "pkv(?![a-z])", "pardus", "tera(?![a-z])", "tera (portfoy|yatirim)", "pusula", "ara odeme\\w*", "portfoy\\w*", "katilma pay\\w*", "hph(?![a-z])", "hkj(?![a-z])", "tp2", "pry(?![a-z])", "pnu(?![a-z])", "pblk", "takasbank", "mkk(?![a-z])"]
+  },
+  "service_default_issues": {
+    "atm": "atm_failure",
+    "fast_eft_transfer": "transfer_failure",
+    "card": "card_failure",
+    "payments": "payment_failure",
+    "internet_banking": "application_unavailable",
+    "mobile_banking": "application_unavailable",
+    "customer_service": "customer_service_unreachable",
+    "all_channels": "application_unavailable",
+    "pos": "application_unavailable",
+    "other": "other",
+    "unknown": "other"
+  },
+  "generic_problem_patterns": ["yapamiyorum", "yapamadim", "yapilamiyor", "olmuyor", "sorun(?!suz)", "hata(?!siz)", "problem", "gitmedi", "vermedi", "rezalet", "berbat", "skandal", "magdur", "isler degil", "duzeltin"],
+  "question_patterns": ["\\?", "(mi|mu|misiniz|musunuz|midir|mudur)(?![a-z])", "nedir", "nasil", "ne zaman", "ne kadar", "hangi", "kac(?![a-z])", "bilgi alabilir"],
+  "resolution_patterns": ["duzeldi", "duzelmis", "sorun (giderildi|cozuldu)", "artik calisiyor", "tekrar calisiyor", "sorunsuz"],
+  "reputation_notes": "Reputation / deposit-risk signals. Only checked when the bank is named; sports and agriculture contexts without a banking detail are excluded. Names must be solvency_rumor, deposit_flight or run_call.",
+  "reputation_signals": [
+    {
+      "name": "solvency_rumor",
+      "patterns": ["bat(iyor|iyormus|iyorlar|acak|acaklar|acakmis|acaktir|arsa)(?![a-z])", "(?<!borca )batti(?![a-z])", "(?<!borca )batmis(?![a-z])", "batmak uzere", "batma (riski|tehlikesi|ihtimali)", "batik (banka|bir banka)", "iflas", "konkordato", "(mevduat|para)\\w* (guvende mi|guvende degil|tehlikede|risk altinda)"]
+    },
+    {
+      "name": "deposit_flight",
+      "patterns": ["hesab(i|im|imi|imizi|lari|larimi|larimizi) kapat(tim|tik|iyorum|iyoruz|acagim|acagiz|icam|tirdim|tiriyorum|tiracagim)(?![a-z])", "hesap kapat(tim|tik|iyorum|acagim)(?![a-z])", "(tum|butun|ne var ne yok) para(m|mi|miz|mizi|lari|larimi|larimizi|yi) (cektim|cektik|cekiyorum|cekiyoruz|cekecegim|cekicem)", "para\\w* baska (bir )?bankaya (gecir|aktar|tasi|yolla|gonder)", "baska (bir )?bankaya (gectim|geciyorum|gececegim|gecicem|tasidim|tasiyorum|tasiyacagim)", "mevduat\\w* (cektim|cekiyorum|cekecegim|tasidim|tasiyorum|bozdum|bozuyorum)"]
+    },
+    {
+      "name": "run_call",
+      "patterns": ["paran\\w* (hemen |acilen |derhal )?cekin", "herkes paras\\w* ceksin", "mevduat\\w* cekin", "hesap\\w* kapatin", "paran\\w* kurtarin"]
+    }
+  ]
+}

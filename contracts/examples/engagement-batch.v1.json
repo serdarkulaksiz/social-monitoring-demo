@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.1",
+  "batch_id": "e-20260101-000001",
+  "updates": [
+    {
+      "source": "synthetic",
+      "source_post_id": "synthetic-post-0001",
+      "observed_at": "2026-01-01T09:31:30Z",
+      "engagement": {"like_count": 42, "repost_count": 17, "reply_count": 5, "quote_count": 2}
+    }
+  ]
+}
