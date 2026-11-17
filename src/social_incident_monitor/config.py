@@ -74,6 +74,8 @@ class Settings(BaseModel):
     data_dir: Path = Path("data")
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     accept_synthetic: bool = False
+    # Demo only: false lets /api/v1 requests in without X-API-Key (loopback host only).
+    require_api_key: bool = True
     classifier: Literal["rule_based", "hybrid", "llm"] = "rule_based"
     classification_rules_path: Path | None = None
     # Text model used with MONITOR_CLASSIFIER=hybrid (default: <data_dir>/models/active.json,
@@ -161,6 +163,8 @@ class Settings(BaseModel):
             raise ValueError("baseline_p_values must be warning:critical with 0 < critical <= warning < 1")
         if not self.allowed_hosts and self.host not in LOOPBACK_HOSTS:
             raise ValueError("allowed_hosts (MONITOR_ALLOWED_HOSTS) must list the server's host names when MONITOR_HOST is not a loopback address")
+        if not self.require_api_key and self.host not in LOOPBACK_HOSTS:
+            raise ValueError("require_api_key (MONITOR_REQUIRE_API_KEY) can be false only when MONITOR_HOST is a loopback address")
         for name in ("reputation_min_users", "reputation_amplification"):
             warning, critical = getattr(self, name)
             if not 0 < warning <= critical:

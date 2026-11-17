@@ -159,6 +159,7 @@ def summary(base_url: str, api_key: str) -> None:
             print(f"İtibar sinyali: {alert['severity']}")
     print()
     print(f"Dashboard: {base_url}/dashboard")
+    print(f"Gönderi atmak için (anahtar gerekmez): POST {base_url}/api/v1/posts/batch")
     print("Durdurmak için bu pencerede Ctrl+C.")
 
 
@@ -199,6 +200,7 @@ def main() -> int:
         "MONITOR_PORT": str(port),
         "MONITOR_DATA_DIR": str(DEMO_DATA / "monitor"),
         "MONITOR_ACCEPT_SYNTHETIC": "true",
+        "MONITOR_REQUIRE_API_KEY": "false",  # demo: posts can be sent without a key
         "MONITOR_CLASSIFIER": "hybrid",
         "MONITOR_TEXT_MODEL_MODE": "active",
         "MONITOR_EVALUATION_INTERVAL_SECONDS": "10",
